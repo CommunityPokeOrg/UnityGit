@@ -1,0 +1,2 @@
+using System; using System.Security.Cryptography; using System.Text;
+namespace CommunityPoke.UnityGit { public static class GitHash { public static string Compute(string type,byte[] data){var header=Encoding.ASCII.GetBytes(type+" "+data.Length+"\0");var all=new byte[header.Length+data.Length];Buffer.BlockCopy(header,0,all,0,header.Length);Buffer.BlockCopy(data,0,all,header.Length,data.Length);using(var sha=SHA1.Create()){var h=sha.ComputeHash(all);var s=new StringBuilder(40);foreach(var b in h)s.Append(b.ToString("x2"));return s.ToString();}} } }

@@ -1,0 +1,7 @@
+using System; using System.IO; using System.IO.Compression; using System.Text;
+namespace CommunityPoke.UnityGit {
+ public sealed class LooseObjectStore { readonly string objects; public LooseObjectStore(string gitDirectory){objects=Path.Combine(gitDirectory,"objects");Directory.CreateDirectory(objects);} 
+ public string Write(GitObject obj){var data=obj.Serialize();var raw=Encoding.ASCII.GetBytes(obj.Type+" "+data.Length+"\0");var body=new byte[raw.Length+data.Length];Buffer.BlockCopy(raw,0,body,0,raw.Length);Buffer.BlockCopy(data,0,body,raw.Length,data.Length);var hash=GitHash.Compute(obj.Type,data);var dir=Path.Combine(objects,hash.Substring(0,2));Directory.CreateDirectory(dir);using(var f=File.Create(Path.Combine(dir,hash.Substring(2))))using(var z=new ZLibStream(f,CompressionLevel.Optimal))z.Write(body,0,body.Length);return hash; }
+ public (string type,byte[] data) Read(string hash){var path=Path.Combine(objects,hash.Substring(0,2),hash.Substring(2));using(var f=File.OpenRead(path))using(var z=new ZLibStream(f,CompressionMode.Decompress))using(var m=new MemoryStream()){z.CopyTo(m);var b=m.ToArray();var zero=Array.IndexOf(b,(byte)0);if(zero<0)throw new InvalidDataException("Invalid Git object");var header=Encoding.ASCII.GetString(b,0,zero).Split(' ');var data=new byte[b.Length-zero-1];Buffer.BlockCopy(b,zero+1,data,0,data.Length);if(data.Length!=int.Parse(header[1]))throw new InvalidDataException("Object length mismatch");return(header[0],data);} }
+ }
+}

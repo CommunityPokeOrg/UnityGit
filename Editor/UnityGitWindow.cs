@@ -1,0 +1,4 @@
+#if UNITY_EDITOR
+using UnityEditor;using UnityEngine;using CommunityPoke.UnityGit;using System;
+namespace CommunityPoke.UnityGit.Editor { public class UnityGitWindow:EditorWindow {Repository repo;string message="Update";[MenuItem("Window/UnityGit")]static void Open(){GetWindow<UnityGitWindow>("UnityGit");}void OnGUI(){GUILayout.Label("UnityGit",EditorStyles.boldLabel);try{repo=Repository.Open(Application.dataPath);GUILayout.Label("Branch: "+repo.Branch);var changes=repo.Status();GUILayout.Label("Changes: "+changes.Count);foreach(var c in changes)GUILayout.Label(c.State+"  "+c.Path);message=EditorGUILayout.TextField("Commit message",message);if(GUILayout.Button("Commit")&&changes.Count>0){foreach(var c in changes)if(c.State!="deleted")repo.Add(c.Path);repo.Commit(message);}}catch(Exception e){GUILayout.HelpBox(e.Message,MessageType.Info);}}} }
+#endif
